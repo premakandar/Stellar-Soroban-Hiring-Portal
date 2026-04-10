@@ -1,0 +1,212 @@
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
+
+.landing-shell {
+  width: min(1200px, 94vw);
+  margin: 30px auto;
+  padding: clamp(20px, 3vw, 36px);
+  border-radius: 30px;
+  border: 1px solid rgba(20, 76, 72, 0.15);
+  background:
+    radial-gradient(circle at 15% 5%, rgba(85, 194, 173, 0.2), transparent 38%),
+    radial-gradient(circle at 85% 0%, rgba(234, 165, 125, 0.22), transparent 30%),
+    linear-gradient(160deg, #f6fbf9 0%, #edf5f2 65%, #f9f8f3 100%);
+  box-shadow: 0 24px 56px rgba(16, 68, 63, 0.15);
+  animation: landingFade 0.7s ease both;
+}
+
+.landing-hero {
+  padding: clamp(22px, 4vw, 48px);
+  border-radius: 24px;
+  border: 1px solid rgba(24, 92, 83, 0.15);
+  background:
+    linear-gradient(130deg, rgba(11, 139, 123, 0.1) 0%, rgba(255, 255, 255, 0.8) 54%),
+    #ffffff;
+}
+
+.landing-kicker {
+  margin: 0;
+  color: #0f6d64;
+  font: 700 0.82rem/1 "Chakra Petch", "Segoe UI", sans-serif;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.landing-hero h1 {
+  margin: 12px 0;
+  max-width: 16ch;
+  color: #0f2728;
+  font: 700 clamp(2rem, 5vw, 4rem) / 1 "Chakra Petch", "Segoe UI", sans-serif;
+}
+
+.landing-copy {
+  margin: 0;
+  max-width: 62ch;
+  color: #3c5859;
+  font: 500 1rem/1.65 "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+.landing-actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.landing-stat-row {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.landing-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(14, 93, 85, 0.28);
+  padding: 6px 12px;
+  color: #184849;
+  background: rgba(255, 255, 255, 0.78);
+  font: 600 0.78rem/1 "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.landing-btn-primary,
+.landing-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 11px 18px;
+  font: 600 0.95rem/1 "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.landing-btn-primary {
+  color: #ffffff;
+  background: linear-gradient(150deg, #0b8b7b 0%, #0f646d 100%);
+  box-shadow: 0 12px 24px rgba(11, 139, 123, 0.28);
+}
+
+.landing-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(11, 139, 123, 0.35);
+}
+
+.landing-btn-ghost {
+  color: #1b3f41;
+  border-color: rgba(24, 92, 83, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.landing-btn-ghost:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+}
+
+.landing-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.feature-card {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 109, 100, 0.17);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(3px);
+  animation: cardRise 0.55s ease both;
+}
+
+.feature-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.feature-card:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.feature-card h2 {
+  margin: 0;
+  color: #103133;
+  font: 700 1.05rem/1.2 "Chakra Petch", "Segoe UI", sans-serif;
+}
+
+.feature-card p {
+  margin: 10px 0 0;
+  color: #436061;
+  font: 500 0.92rem/1.6 "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+.landing-flow,
+.landing-note {
+  margin-top: 14px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 109, 100, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(245, 251, 248, 0.92));
+}
+
+.landing-flow h2,
+.landing-note h2 {
+  margin: 0;
+  color: #103235;
+  font: 700 1rem/1.2 "Chakra Petch", "Segoe UI", sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.landing-flow ol {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: #335657;
+  font: 500 0.95rem/1.6 "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+.landing-flow li + li {
+  margin-top: 8px;
+}
+
+.landing-note p {
+  margin: 12px 0 0;
+  color: #3f5f60;
+  font: 500 0.94rem/1.65 "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+@media (max-width: 920px) {
+  .landing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-shell {
+    margin: 16px auto;
+    border-radius: 20px;
+  }
+}
+
+@keyframes landingFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
