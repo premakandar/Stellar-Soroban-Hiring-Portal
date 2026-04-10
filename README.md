@@ -9,6 +9,20 @@ The app currently includes a landing page and a dashboard flow for:
 - hiring applicants
 - querying jobs and application counts
 
+## Screenshots
+
+### Landing Page
+
+![Landing Page](public/landing-page.png)
+
+### Job Portal Dashboard
+
+![Job Portal Dashboard](public/job-page.png)
+
+### Contract on Stellar Expert
+
+![Contract on Stellar Expert](public/wallet.png)
+
 ## Analysis Snapshot
 
 After reviewing the codebase, this is the current state:
@@ -112,20 +126,6 @@ If you deploy a new contract, update these values accordingly.
 ## Contract Explorer Link
 
 - Testnet contract: [https://stellar.expert/explorer/testnet/contract/CCN6NG3SKGOQED3GREGLPUDBVZZKQTQZWKKQ4YNSE22IT4QWQFMZYDWS](https://stellar.expert/explorer/testnet/contract/CCN6NG3SKGOQED3GREGLPUDBVZZKQTQZWKKQ4YNSE22IT4QWQFMZYDWS)
-
-## Screenshots
-
-### Landing Page
-
-![Landing Page](public/landing-page.png)
-
-### Job Portal Dashboard
-
-![Job Portal Dashboard](public/job-page.png)
-
-### Contract on Stellar Expert
-
-![Contract on Stellar Expert](public/wallet.png)
 
 ## Recommended Next Step
 
