@@ -7,44 +7,64 @@ use soroban_sdk::{
 
 #[contracttype]
 #[derive(Clone)]
-pub struct Record {
-    pub owner: Address,
+pub struct Job {
+    pub employer: Address,
     pub title: String,
-    pub category: Symbol,
     pub description: String,
-    pub archived: bool,
-    pub created_at: u64,
-    pub updated_at: u64,
+    pub location: String,
+    pub salary_min: i128,
+    pub salary_max: i128,
+    pub job_type: Symbol,
+    pub applicant_count: u32,
+    pub is_open: bool,
+    pub posted_at: u64,
 }
 
 #[contracttype]
 #[derive(Clone)]
-pub enum RecordDataKey {
-    IdList,
-    Record(Symbol),
-    Count,
-    CategoryIndex(Symbol),
+pub struct Application {
+    pub cover_letter: String,
+    pub applied_at: u64,
+    pub is_hired: bool,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub enum DataKey {
+    JobList,
+    Job(Symbol),
+    Application(Symbol, Address),
+    ApplicationCount(Symbol),
 }
 
 #[contracterror]
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
-pub enum RecordError {
-    InvalidTitle = 1,
-    InvalidTimestamp = 2,
-    NotFound = 3,
-    AlreadyExists = 4,
-    Unauthorized = 5,
-    AlreadyArchived = 6,
+pub enum JobPortalError {
+    JobNotFound = 1,
+    JobAlreadyExists = 2,
+    JobClosed = 3,
+    NotEmployer = 4,
+    InvalidTitle = 5,
+    InvalidSalaryRange = 6,
+    AlreadyApplied = 7,
+    ApplicationNotFound = 8,
 }
 
 #[contract]
-pub struct RecordManagementContract;
+pub struct JobOpportunityPortalContract;
 
 #[contractimpl]
-impl RecordManagementContract {
-    fn record_key(id: &Symbol) -> RecordDataKey {
-        RecordDataKey::Record(id.clone())
+impl JobOpportunityPortalContract {
+    fn load_ids(env: &Env) -> Vec<Symbol> {
+        env.storage()
+            .instance()
+            .get(&DataKey::JobList)
+            .unwrap_or(Vec::new(env))
+    }
+
+    fn save_ids(env: &Env, ids: &Vec<Symbol>) {
+        env.storage().instance().set(&DataKey::JobList, ids);
     }
 
     fn has_id(ids: &Vec<Symbol>, id: &Symbol) -> bool {
@@ -56,140 +76,156 @@ impl RecordManagementContract {
         false
     }
 
-    fn load_ids(env: &Env) -> Vec<Symbol> {
-        env.storage().instance().get(&RecordDataKey::IdList).unwrap_or(Vec::new(env))
-    }
-
-    fn save_ids(env: &Env, ids: &Vec<Symbol>) {
-        env.storage().instance().set(&RecordDataKey::IdList, ids);
-    }
-
-    fn load_category_ids(env: &Env, category: &Symbol) -> Vec<Symbol> {
-        env.storage().instance().get(&RecordDataKey::CategoryIndex(category.clone())).unwrap_or(Vec::new(env))
-    }
-
-    fn save_category_ids(env: &Env, category: &Symbol, ids: &Vec<Symbol>) {
-        env.storage().instance().set(&RecordDataKey::CategoryIndex(category.clone()), ids);
-    }
-
-    pub fn create_record(
+    pub fn post_job(
         env: Env,
         id: Symbol,
-        owner: Address,
+        employer: Address,
         title: String,
-        category: Symbol,
         description: String,
-        created_at: u64,
+        location: String,
+        salary_min: i128,
+        salary_max: i128,
+        job_type: Symbol,
     ) {
-        owner.require_auth();
+        employer.require_auth();
 
         if title.len() == 0 {
-            panic_with_error!(&env, RecordError::InvalidTitle);
+            panic_with_error!(env, JobPortalError::InvalidTitle);
         }
-        if created_at == 0 {
-            panic_with_error!(&env, RecordError::InvalidTimestamp);
+        if salary_min > salary_max {
+            panic_with_error!(env, JobPortalError::InvalidSalaryRange);
         }
 
-        let key = Self::record_key(&id);
+        let key = DataKey::Job(id.clone());
         if env.storage().instance().has(&key) {
-            panic_with_error!(&env, RecordError::AlreadyExists);
+            panic_with_error!(env, JobPortalError::JobAlreadyExists);
         }
 
-        let record = Record {
-            owner,
+        let job = Job {
+            employer,
             title,
-            category: category.clone(),
             description,
-            archived: false,
-            created_at,
-            updated_at: created_at,
+            location,
+            salary_min,
+            salary_max,
+            job_type,
+            applicant_count: 0,
+            is_open: true,
+            posted_at: env.ledger().timestamp(),
         };
 
-        env.storage().instance().set(&key, &record);
+        env.storage().instance().set(&key, &job);
+        env.storage()
+            .instance()
+            .set(&DataKey::ApplicationCount(id.clone()), &0u32);
 
         let mut ids = Self::load_ids(&env);
-        ids.push_back(id.clone());
-        Self::save_ids(&env, &ids);
-
-        let mut cat_ids = Self::load_category_ids(&env, &category);
-        cat_ids.push_back(id);
-        Self::save_category_ids(&env, &category, &cat_ids);
-
-        let count: u32 = env.storage().instance().get(&RecordDataKey::Count).unwrap_or(0);
-        env.storage().instance().set(&RecordDataKey::Count, &(count + 1));
+        if !Self::has_id(&ids, &id) {
+            ids.push_back(id);
+            Self::save_ids(&env, &ids);
+        }
     }
 
-    pub fn update_record(
+    pub fn apply_job(
         env: Env,
-        id: Symbol,
-        owner: Address,
-        title: String,
-        category: Symbol,
-        description: String,
-        updated_at: u64,
+        job_id: Symbol,
+        applicant: Address,
+        cover_letter: String,
     ) {
-        owner.require_auth();
+        applicant.require_auth();
 
-        if title.len() == 0 {
-            panic_with_error!(&env, RecordError::InvalidTitle);
+        let key = DataKey::Job(job_id.clone());
+        let mut job: Job = env
+            .storage()
+            .instance()
+            .get(&key)
+            .unwrap_or_else(|| panic_with_error!(env, JobPortalError::JobNotFound));
+
+        if !job.is_open {
+            panic_with_error!(env, JobPortalError::JobClosed);
         }
-        if updated_at == 0 {
-            panic_with_error!(&env, RecordError::InvalidTimestamp);
+
+        let app_key = DataKey::Application(job_id.clone(), applicant);
+        if env.storage().instance().has(&app_key) {
+            panic_with_error!(env, JobPortalError::AlreadyApplied);
         }
 
-        let key = Self::record_key(&id);
-        let maybe: Option<Record> = env.storage().instance().get(&key);
+        let application = Application {
+            cover_letter,
+            applied_at: env.ledger().timestamp(),
+            is_hired: false,
+        };
 
-        if let Some(mut record) = maybe {
-            if record.owner != owner {
-                panic_with_error!(&env, RecordError::Unauthorized);
-            }
+        env.storage().instance().set(&app_key, &application);
 
-            record.title = title;
-            record.category = category;
-            record.description = description;
-            record.updated_at = updated_at;
+        job.applicant_count += 1;
+        env.storage().instance().set(&key, &job);
 
-            env.storage().instance().set(&key, &record);
-        } else {
-            panic_with_error!(&env, RecordError::NotFound);
-        }
+        let count_key = DataKey::ApplicationCount(job_id);
+        let count: u32 = env.storage().instance().get(&count_key).unwrap_or(0);
+        env.storage().instance().set(&count_key, &(count + 1));
     }
 
-    pub fn archive_record(env: Env, id: Symbol, owner: Address) {
-        owner.require_auth();
+    pub fn close_job(env: Env, id: Symbol, employer: Address) {
+        employer.require_auth();
 
-        let key = Self::record_key(&id);
-        let maybe: Option<Record> = env.storage().instance().get(&key);
+        let key = DataKey::Job(id.clone());
+        let mut job: Job = env
+            .storage()
+            .instance()
+            .get(&key)
+            .unwrap_or_else(|| panic_with_error!(env, JobPortalError::JobNotFound));
 
-        if let Some(mut record) = maybe {
-            if record.owner != owner {
-                panic_with_error!(&env, RecordError::Unauthorized);
-            }
-            if record.archived {
-                panic_with_error!(&env, RecordError::AlreadyArchived);
-            }
-
-            record.archived = true;
-            env.storage().instance().set(&key, &record);
-        } else {
-            panic_with_error!(&env, RecordError::NotFound);
+        if job.employer != employer {
+            panic_with_error!(env, JobPortalError::NotEmployer);
         }
+
+        job.is_open = false;
+        env.storage().instance().set(&key, &job);
     }
 
-    pub fn get_record(env: Env, id: Symbol) -> Option<Record> {
-        env.storage().instance().get(&Self::record_key(&id))
+    pub fn hire_applicant(
+        env: Env,
+        job_id: Symbol,
+        employer: Address,
+        applicant: Address,
+    ) {
+        employer.require_auth();
+
+        let key = DataKey::Job(job_id.clone());
+        let job: Job = env
+            .storage()
+            .instance()
+            .get(&key)
+            .unwrap_or_else(|| panic_with_error!(env, JobPortalError::JobNotFound));
+
+        if job.employer != employer {
+            panic_with_error!(env, JobPortalError::NotEmployer);
+        }
+
+        let app_key = DataKey::Application(job_id, applicant);
+        let mut application: Application = env
+            .storage()
+            .instance()
+            .get(&app_key)
+            .unwrap_or_else(|| panic_with_error!(env, JobPortalError::ApplicationNotFound));
+
+        application.is_hired = true;
+        env.storage().instance().set(&app_key, &application);
     }
 
-    pub fn list_records(env: Env) -> Vec<Symbol> {
+    pub fn get_job(env: Env, id: Symbol) -> Option<Job> {
+        env.storage().instance().get(&DataKey::Job(id))
+    }
+
+    pub fn list_jobs(env: Env) -> Vec<Symbol> {
         Self::load_ids(&env)
     }
 
-    pub fn get_records_by_category(env: Env, category: Symbol) -> Vec<Symbol> {
-        Self::load_category_ids(&env, &category)
-    }
-
-    pub fn get_count(env: Env) -> u32 {
-        env.storage().instance().get(&RecordDataKey::Count).unwrap_or(0)
+    pub fn get_application_count(env: Env, job_id: Symbol) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::ApplicationCount(job_id))
+            .unwrap_or(0)
     }
 }
